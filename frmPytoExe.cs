@@ -17,6 +17,7 @@ namespace PythonToExe
         public frmPyToExe()
         {
             InitializeComponent();
+            textBoxPath.KeyPress += new KeyPressEventHandler(CheckEnter);
         }
 
         private void compile()
@@ -35,9 +36,9 @@ namespace PythonToExe
                     string work_folder = desktop + @"\" + filename_WO_Ext; // put the new folder on the desktop
                     string bat_file = work_folder + @"\Pycompile.bat"; //bat file path
 
-                    check_dir(work_folder);
-                    check_file(work_folder);
-                    
+                    check_dir(work_folder);//check if directory exists
+                    check_file(full_file_path);//check if file exists
+
                     using (StreamWriter sw = new StreamWriter(bat_file))//write commands to file
                     {
                         sw.WriteLine("cd /d " + "\"" + work_folder); // cd into work folder 
@@ -46,6 +47,7 @@ namespace PythonToExe
                     }
 
                     Process.Start(bat_file);//run batch file
+                    reset_text();
                 }
             }
             catch (IOException ioe)
@@ -54,16 +56,35 @@ namespace PythonToExe
             }
         }
 
+        private void reset_text()
+        {
+            textBoxPath.Text = "";
+        }
+
         private void check_dir(string path)//check if directory exists
         {
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
+            try
+            {
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+            }
+            catch (IOException ioe)
+            {
+                MessageBox.Show(ioe.ToString());
+            }
         }
 
         private void check_file(string path) //check if path exists
         {
-            if (!File.Exists(path))
-                File.Create(path);
+            try
+            {
+                if (!File.Exists(path))
+                    File.Create(path);
+            }
+            catch (UnauthorizedAccessException uae)
+            {
+                MessageBox.Show(uae.ToString());
+            }
         }
 
         private void btnRun_Click(object sender, EventArgs e)
@@ -78,8 +99,14 @@ namespace PythonToExe
             if (!File.Exists(path))
             {
                 MessageBox.Show("file does not exists or path is invalid");
-                textBoxPath.Text = "";
+                reset_text();
             }
+        }
+
+        private void CheckEnter(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)13)
+                btnRun.PerformClick();//run app with enter key
         }
     }
 }
